@@ -41,7 +41,7 @@ jobs:
 
       - run: auditwheel show dist/*
 
-      - run: auditwheel repair --plat manylinux_2_24_x86_64 dist/*
+      - run: auditwheel repair --plat manylinux_2_24_x86_64 --exclude libOpenCL.so.1 dist/*
 
       - uses: actions/upload-artifact@v3
         with:
