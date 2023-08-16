@@ -6,6 +6,7 @@ jobs:
   build_wheels_linux:
     name: Build wheels on ubuntu-latest
     runs-on: ubuntu-latest
+    container: quay.io/pypa/manylinux2014_x86_64
     strategy:
       matrix:
         python-version: ["3.8", "3.9", "3.10", "3.11"]
@@ -41,6 +42,11 @@ jobs:
       - run: auditwheel show dist/*
 
       - run: auditwheel repair --plat manylinux_2_24_x86_64 dist/*
+
+      - name: test wheel
+        run: |
+          pip install ./wheelhouse/*.whl
+          python -c "import llama_cpp"
 
       - uses: actions/upload-artifact@v3
         with:
@@ -79,6 +85,11 @@ jobs:
           FORCE_CMAKE: "1"
 
       - run: delvewheel show (get-childitem dist/*.whl)
+
+      - name: test wheel
+        run: |
+          pip install (get-childitem dist/*.whl)
+          python -c "import llama_cpp"
 
       - uses: actions/upload-artifact@v3
         with:
