@@ -43,11 +43,6 @@ jobs:
 
       - run: auditwheel repair --plat manylinux_2_24_x86_64 dist/*
 
-      - name: test wheel
-        run: |
-          pip install ./wheelhouse/*.whl
-          python -c "import llama_cpp"
-
       - uses: actions/upload-artifact@v3
         with:
           path: ./wheelhouse/*.whl
@@ -86,11 +81,28 @@ jobs:
 
       - run: delvewheel show (get-childitem dist/*.whl)
 
-      - name: test wheel
-        run: |
-          pip install (get-childitem dist/*.whl)
-          python -c "import llama_cpp"
-
       - uses: actions/upload-artifact@v3
         with:
           path: ./dist/*.whl
+
+  test_wheel:
+    name: Test wheels
+    needs: [build_wheels_linux, build_wheels_windows]
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/setup-python@v4
+        with:
+          python-version: "3.11"
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: artifact
+          path: dist
+
+      - run: pip install -f dist llama-cpp-python
+
+      - run: python -c "import llama_cpp"
