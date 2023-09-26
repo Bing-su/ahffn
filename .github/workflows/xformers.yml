@@ -27,11 +27,11 @@ jobs:
           method: network
           use-github-cache: false
 
+      - name: install build tools
+        run: pip install -U ninja build wheel setuptools
+
       - name: install pytorch
         run: pip install torch==2.1.0+cu121 --index-url https://download.pytorch.org/whl/test/cu121
-
-      - name: install build tools
-        run: pip install ninja build
 
       - name: build wheel
         env:
