@@ -9,6 +9,7 @@ jobs:
     strategy:
       matrix:
         python-version: ["3.10", "3.11"]
+      max-parallel: 1
 
     steps:
       - uses: actions/checkout@v4
@@ -28,7 +29,7 @@ jobs:
           use-github-cache: false
 
       - name: install build tools
-        run: pip install -U ninja build wheel setuptools
+        run: pip install -U build wheel setuptools
 
       - name: install pytorch
         run: pip install torch==2.1.0+cu121 --index-url https://download.pytorch.org/whl/test/cu121
