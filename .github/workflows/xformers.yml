@@ -29,7 +29,7 @@ jobs:
           use-github-cache: false
 
       - name: install build tools
-        run: pip install -U build wheel setuptools
+        run: pip install -U build wheel setuptools numpy
 
       - name: install pytorch
         run: pip install torch==2.1.0+cu121 --index-url https://download.pytorch.org/whl/test/cu121
