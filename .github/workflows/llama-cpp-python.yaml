@@ -80,13 +80,13 @@ jobs:
           echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
           echo $CONDA_PREFIX\\bin >> "$GITHUB_PATH"
 
-      - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
+      - run: conda install -y clblast
       - run: conda install -y build delvewheel
 
       - name: build wheel
         run: python -m build --wheel .
         env:
-          CMAKE_ARGS: "-DLLAMA_CUBLAS=on"
+          CMAKE_ARGS: "-DLLAMA_CLBLAST=on"
           FORCE_CMAKE: "1"
 
       - run: delvewheel show (get-childitem dist/*.whl)
