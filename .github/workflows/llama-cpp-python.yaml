@@ -19,7 +19,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: abetlen/llama-cpp-python
-          ref: v0.2.20
+          ref: v0.2.21
           submodules: true
 
       - uses: conda-incubator/setup-miniconda@v2
@@ -29,7 +29,9 @@ jobs:
           miniforge-version: latest
 
       - name: echo conda-prefix
-        run: echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
+        run: |
+          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
+          echo $CONDA_PREFIX/bin >> "$GITHUB_PATH"
 
       - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
       - run: conda install -y build auditwheel
@@ -63,7 +65,7 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: abetlen/llama-cpp-python
-          ref: v0.2.20
+          ref: v0.2.21
           submodules: true
 
       - uses: conda-incubator/setup-miniconda@v2
@@ -73,8 +75,10 @@ jobs:
           channels: conda-forge
 
       - name: echo conda-prefix
-        run: echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
         shell: bash
+        run: |
+          echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
+          echo $CONDA_PREFIX\\bin >> "$GITHUB_PATH"
 
       - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
       - run: conda install -y build delvewheel
@@ -82,7 +86,7 @@ jobs:
       - name: build wheel
         run: python -m build --wheel .
         env:
-          CMAKE_ARGS: "-DLLAMA_CUBLAS=on -A x64"
+          CMAKE_ARGS: "-DLLAMA_CUBLAS=on"
           FORCE_CMAKE: "1"
 
       - run: delvewheel show (get-childitem dist/*.whl)
@@ -102,7 +106,7 @@ jobs:
     steps:
       - uses: actions/setup-python@v4
         with:
-          python-version: "3.x"
+          python-version: "3.11"
 
       - uses: actions/download-artifact@v3
         with:
