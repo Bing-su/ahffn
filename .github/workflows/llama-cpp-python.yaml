@@ -18,8 +18,8 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          repository: abetlen/llama-cpp-python
-          ref: v0.2.21
+          repository: Bing-su/llama-cpp-python
+          ref: function
           submodules: true
 
       - uses: conda-incubator/setup-miniconda@v2
