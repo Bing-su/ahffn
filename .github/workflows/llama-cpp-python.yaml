@@ -72,18 +72,20 @@ jobs:
     strategy:
       matrix:
         os: [ubuntu-latest]
+        python-version: ["3.12"]
 
     steps:
       - uses: actions/setup-python@v4
         id: python
         with:
-          python-version: "3.12"
+          python-version: ${{ matrix.python-version }}
 
       - uses: actions/download-artifact@v4
         with:
-          pattern: llama-cpp-python-${{ steps.python.outputs.python-version }}-*
+          pattern: llama-cpp-python-${{ matrix.python-version }}-*
           path: dist
 
+      - run: ls -R dist
       - run: pip install -f dist llama-cpp-python
 
       - run: python -c "import llama_cpp"
