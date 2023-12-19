@@ -16,20 +16,25 @@ jobs:
         shell: bash -el {0}
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Get latest tag
+        id: get-latest-tag
+        uses: actions/github-script@v7
+        with:
+          result-encoding: string
+          script: |
+            const response = await github.rest.repos.listTags({
+              owner: 'abetlen',
+              repo: 'llama-cpp-python'
+            });
+            const latestTag = response.data[0].name;
+            console.log(`Latest tag is ${latestTag}`);
+            return latestTag
+
+      - uses: actions/checkout@v4
         with:
           repository: abetlen/llama-cpp-python
           submodules: true
-
-      - name: get latest tag
-        id: get-latest-tag
-        run: |
-          git config --global --add safe.directory /__w/${{ github.event.repository.name }}/${{ github.event.repository.name }}
-          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
-          echo "::set-output name=latest_tag::$latest_tag"
-
-      - name: checkout latest tag
-        run: git checkout ${{ steps.get-latest-tag.outputs.latest_tag }}
+          ref: ${{ steps.get-latest-tag.outputs.result }}
 
       - uses: conda-incubator/setup-miniconda@v3
         with:
