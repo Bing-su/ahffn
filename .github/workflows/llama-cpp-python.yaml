@@ -19,22 +19,31 @@ jobs:
       - uses: actions/checkout@v3
         with:
           repository: abetlen/llama-cpp-python
-          ref: $(git describe --tags `git rev-list --tags --max-count=1`)
           submodules: true
 
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: get latest tag
+        id: get-latest-tag
+        run: |
+          latest_tag=$(git describe --tags `git rev-list --tags --max-count=1`)
+          echo "::set-output name=latest_tag::$latest_tag"
+
+      - name: checkout latest tag
+        run: git checkout ${{ steps.get-latest-tag.outputs.latest_tag }}
+
+      - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          channels: conda-forge
+          mamba-version: "*"
           miniforge-version: latest
+          channels: conda-forge
 
       - name: echo conda-prefix
         run: |
           echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
           echo $CONDA_PREFIX/bin >> "$GITHUB_PATH"
 
-      - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
-      - run: conda install -y build auditwheel
+      - run: mamba install -y -c "nvidia/label/cuda-12.1.1" cuda
+      - run: mamba install -y build auditwheel
 
       - name: build wheel
         run: python -m build --wheel .
@@ -46,10 +55,10 @@ jobs:
 
       - run: auditwheel repair --plat manylinux_2_28_x86_64 --exclude libllama.so --exclude libllava.so --exclude libggml_shared.so dist/*
 
-      - uses: actions/upload-artifact@v3
+      - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-          name: llama-cpp-python-${{ matrix.python-version }}
+          name: llama-cpp-python-${{ matrix.python-version }}-${{ steps.get-latest-tag.outputs.latest_tag }}
 
   test_wheel:
     name: Test wheels
@@ -61,12 +70,13 @@ jobs:
 
     steps:
       - uses: actions/setup-python@v4
+        id: python
         with:
           python-version: "3.12"
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
-          name: llama-cpp-python-3.12
+          pattern: llama-cpp-python-${{ steps.python.outputs.python-version }}-*
           path: dist
 
       - run: pip install -f dist llama-cpp-python
