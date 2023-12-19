@@ -39,7 +39,6 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: ${{ matrix.python-version }}
-          mamba-version: "*"
           miniforge-version: latest
           channels: conda-forge
 
@@ -48,8 +47,8 @@ jobs:
           echo "LD_LIBRARY_PATH=$CONDA_PREFIX/lib" >> "$GITHUB_ENV"
           echo $CONDA_PREFIX/bin >> "$GITHUB_PATH"
 
-      - run: mamba install -y -c "nvidia/label/cuda-12.1.1" cuda
-      - run: mamba install -y build auditwheel
+      - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
+      - run: conda install -y build auditwheel
 
       - name: build wheel
         run: python -m build --wheel .
@@ -64,7 +63,7 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           path: ./wheelhouse/*.whl
-          name: llama-cpp-python-${{ matrix.python-version }}-${{ steps.get-latest-tag.outputs.latest_tag }}
+          name: llama-cpp-python-${{ matrix.python-version }}-${{ steps.get-latest-tag.outputs.result }}
 
   test_wheel:
     name: Test wheels
