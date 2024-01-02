@@ -89,6 +89,7 @@ jobs:
         with:
           pattern: llama-cpp-python-${{ matrix.python-version }}-*
           path: dist
+          merge-multiple: true
 
       - run: ls -R dist
       - run: pip install -f dist llama-cpp-python
