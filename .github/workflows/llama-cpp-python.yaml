@@ -50,6 +50,11 @@ jobs:
       - run: conda install -y -c "nvidia/label/cuda-12.1.1" cuda
       - run: conda install -y build auditwheel
 
+      - name: libcuda symlink
+        run: |
+          LIBCUDA_PATH=$(find $CONDA_PREFIX -name libcuda.so -print -quit)
+          ln -s $LIBCUDA_PATH $CONDA_PREFIX/lib/libcuda.so.1
+
       - name: build wheel
         run: python -m build --wheel .
         env:
