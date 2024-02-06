@@ -32,7 +32,7 @@ jobs:
       - uses: actions/checkout@v4
         with:
           repository: abetlen/llama-cpp-python
-          submodules: true
+          submodules: recursive
           ref: ${{ steps.get-latest-tag.outputs.result }}
 
       - uses: actions/setup-python@v5
