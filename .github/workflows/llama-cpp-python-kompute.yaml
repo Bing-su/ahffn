@@ -4,9 +4,8 @@ on: workflow_dispatch
 
 jobs:
   build_wheels_linux:
-    name: Build wheels on ubuntu-latest
-    runs-on: ubuntu-latest
-    container: quay.io/pypa/manylinux_2_28_x86_64
+    name: Build wheels on ubuntu
+    runs-on: ubuntu-20.04
     strategy:
       matrix:
         python-version: ["3.9", "3.10", "3.11", "3.12"]
@@ -40,10 +39,14 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: dnf install
+      - name: Install Vulkan SDK
         run: |
-          dnf groupinstall -y "development tools"
-          dnf install -y glslc vulkan-headers vulkan-loader-devel
+          wget -qO - http://packages.lunarg.com/lunarg-signing-key-pub.asc | sudo apt-key add -
+          sudo wget -qO /etc/apt/sources.list.d/lunarg-vulkan-focal.list http://packages.lunarg.com/vulkan/lunarg-vulkan-focal.list
+          sudo apt update
+          sudo apt install -y vulkan-sdk
+
+      - run: ldd --version
 
       - run: pip install -U pip build auditwheel patchelf
 
@@ -55,7 +58,7 @@ jobs:
 
       - run: auditwheel show dist/*
 
-      - run: auditwheel repair --plat manylinux_2_28_x86_64 --exclude libllama.so dist/*
+      - run: auditwheel repair --plat manylinux_2_31_x86_64 --exclude libllama.so dist/*
 
       - uses: actions/upload-artifact@v4
         with:
