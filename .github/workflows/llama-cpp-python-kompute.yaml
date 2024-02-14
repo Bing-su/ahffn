@@ -53,7 +53,7 @@ jobs:
       - name: build wheel
         run: python -m build --wheel .
         env:
-          CMAKE_ARGS: "-DLLAMA_KOMPUTE=on"
+          CMAKE_ARGS: "-DLLAMA_KOMPUTE=on -DKOMPUTE_OPT_DISABLE_VULKAN_VERSION_CHECK=ON -DBUILD_SHARED_LIBS=ON"
           FORCE_CMAKE: "1"
 
       - run: auditwheel show dist/*
