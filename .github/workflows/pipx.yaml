@@ -5,7 +5,7 @@ on: workflow_dispatch
 jobs:
   build:
     name: Build pipx executable
-    runs-on: ubuntu-latest
+    runs-on: ${{ matrix.os }}
     strategy:
       matrix:
         include:
@@ -17,14 +17,13 @@ jobs:
             target: aarch64-unknown-linux-gnu
             package: cargo-zigbuild
             tool: zigbuild
-          - os: macos-latest
+          - os: ubuntu-latest
             target: aarch64-apple-darwin
             package: cargo-zigbuild
             tool: zigbuild
           - os: windows-latest
             target: x86_64-pc-windows-msvc
-            package: cargo-xwin
-            tool: xwin build
+            tool: build
 
     defaults:
       run:
@@ -45,17 +44,12 @@ jobs:
           rustup target add ${{ matrix.target }}
 
       - name: Setup tool
+        if: matrix.package != ''
         run: cargo install --locked ${{ matrix.package }}
 
       - name: Install zig
         if: matrix.package == 'cargo-zigbuild'
         uses: goto-bus-stop/setup-zig@v2
-
-      - name: Install LLVM and Clang
-        if: matrix.package == 'cargo-xwin'
-        uses: KyleMayes/install-llvm-action@v2
-        with:
-          version: "18"
 
       - name: Build
         run: cargo ${{ matrix.tool }} --target ${{ matrix.target }} --release
@@ -66,9 +60,10 @@ jobs:
 
       - name: Rename
         run: |
-          try { cp target/release/pyapp ./pipx } catch { |err| $err.msg }
-          try { cp target/${{ matrix.target }}/release/pyapp ./pipx } catch { |err| $err.msg }
-          try { cp target/${{ matrix.target }}/release/pyapp.exe ./pipx.exe } catch { |err| $err.msg }
+          try { cp target/release/pyapp ./pipx }
+          try { cp target/release/pyapp.exe ./pipx.exe }
+          try { cp target/${{ matrix.target }}/release/pyapp ./pipx }
+          try { cp target/${{ matrix.target }}/release/pyapp.exe ./pipx.exe }
 
       - name: Upload
         uses: actions/upload-artifact@v4
