@@ -5,7 +5,7 @@ on: workflow_dispatch
 jobs:
   build:
     name: Build pipx executable
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
     strategy:
       matrix:
         include:
@@ -54,7 +54,8 @@ jobs:
         run: cargo ${{ matrix.tool }} --target ${{ matrix.target }} --release
         env:
           PYAPP_PROJECT_NAME: pipx
-          PYAPP_VERSION: 1.7.0
+          PYAPP_PROJECT_VERSION: 1.7.0
+          PYAPP_EXEC_SCRIPT: pipx.main:cli
 
       - name: Upload
         uses: actions/upload-artifact@v4
