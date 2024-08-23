@@ -10,11 +10,11 @@ jobs:
       matrix:
         include:
           - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
+            target: x86_64-unknown-linux-gnu
             package: cargo-zigbuild
             tool: zigbuild
           - os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
+            target: aarch64-unknown-linux-gnu
             package: cargo-zigbuild
             tool: zigbuild
           - os: macos-latest
@@ -48,17 +48,32 @@ jobs:
         run: cargo install --locked ${{ matrix.package }}
 
       - name: Install zig
+        if: matrix.package == 'cargo-zigbuild'
         uses: goto-bus-stop/setup-zig@v2
+
+      - name: Install LLVM and Clang
+        if: matrix.package == 'cargo-xwin'
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "18"
 
       - name: Build
         run: cargo ${{ matrix.tool }} --target ${{ matrix.target }} --release
         env:
           PYAPP_PROJECT_NAME: pipx
           PYAPP_PROJECT_VERSION: 1.7.0
-          PYAPP_EXEC_SCRIPT: pipx.main:cli
+          PYAPP_EXEC_SPEC: pipx.main:cli
+
+      - name: Rename
+        run: |
+          try { cp target/release/pyapp ./pipx } catch { |err| $err.msg }
+          try { cp target/${{ matrix.target }}/release/pyapp ./pipx } catch { |err| $err.msg }
+          try { cp target/${{ matrix.target }}/release/pyapp.exe ./pipx.exe } catch { |err| $err.msg }
 
       - name: Upload
         uses: actions/upload-artifact@v4
         with:
           name: ${{ matrix.target }}
-          path: target/${{ matrix.target }}/release/pipx*
+          path: |
+            pipx
+            pipx.exe
