@@ -1,0 +1,48 @@
+name: pipx
+
+on: workflow_dispatch
+
+jobs:
+  build:
+    name: Build pipx executable
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        target:
+          - "x86_64-unknown-linux-musl"
+          - "aarch64-unknown-linux-musl"
+          - "aarch64-apple-darwin"
+          - "x86_64-pc-windows-msvc"
+
+    defaults:
+      run:
+        shell: nu {0}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          repository: ofek/pyapp
+
+      - name: Setup nu
+        uses: hustcer/setup-nu@v3
+
+      - name: Setup rust
+        run: |
+          rustup update
+          rustup target add ${{ matrix.target }}
+
+      - name: Setup cross
+        run: cargo install cross
+
+      - name: Build
+        run: cross build --target ${{ matrix.target }} --release
+        env:
+          PYAPP_PROJECT_NAME: pipx
+          PYAPP_VERSION: 1.7.0
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.target }}
+          path: target/${{ matrix.target }}/release/pipx*
