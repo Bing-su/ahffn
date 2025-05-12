@@ -1,0 +1,49 @@
+name: JuiceFs
+
+on:
+  workflow_dispatch:
+
+defaults:
+  run:
+    shell: nu {0}
+jobs:
+  build:
+    runs-on: windows-11-arm
+    steps:
+      - uses: hustcer/setup-nu@v3
+      - uses: actions/checkout@v4
+        with:
+          repository: juicedata/juicefs
+          ref: v1.2.3
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+
+      #   - run: winget install WinFsp.WinFsp
+      - run: choco install -y winfsp
+
+      - name: Copy WinFsp headers
+        run: |
+          mkdir ${{ github.workspace }}/include
+          cp -r ./hack/winfsp_headers/* ${{ github.workspace }}/include
+
+      - name: Build
+        run: |
+          go build -o juicefs.exe -ldflags "-s -w" -trimpath .
+        env:
+          CC: gcc
+          CXX: g++
+          CGO_ENABLED: "1"
+          CGO_CFLAGS: "-I${{ github.workspace }}/include"
+
+      - name: Test
+        run: |
+          ./juicefs.exe --version
+          ./juicefs.exe --help
+          du ./juicefs.exe
+
+          job spawn { juicefs format sqlite3://myjfs.db myjfs o+e> log.txt }
+          sleep 2sec
+
+          open log.txt
