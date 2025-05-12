@@ -8,7 +8,21 @@ defaults:
     shell: nu {0}
 jobs:
   build:
-    runs-on: windows-11-arm
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            cc: "musl-gcc"
+          - os: ubuntu-24.04-arm
+            cc: "musl-gcc"
+          - os: macos-latest
+          - os: windows-latest
+            cc: "gcc"
+            cxx: "g++"
+
     steps:
       - uses: hustcer/setup-nu@v3
       - uses: mlugg/setup-zig@v2
@@ -21,32 +35,76 @@ jobs:
         with:
           go-version: "stable"
 
-      #   - run: winget install WinFsp.WinFsp
+      - name: Setup Musl
+        if: runner.os == 'Linux'
+        run: |
+          sudo apt update
+          sudo apt install -y musl-dev musl-tools
+
       - run: choco install -y winfsp
+        if: runner.os == 'Windows'
 
       - name: Copy WinFsp headers
+        if: runner.os == 'Windows'
         run: |
           mkdir ${{ github.workspace }}/include
           cp -r ./hack/winfsp_headers/* ${{ github.workspace }}/include
 
-      - name: Build
+      - name: Build (Windows)
+        if: runner.os == 'Windows'
         run: |
           go build -o juicefs.exe -ldflags "-s -w" -trimpath .
         env:
-          #   CC: gcc
-          #   CXX: g++
-          CC: "zig cc"
-          CXX: "zig c++"
+          CC: "${{ matrix.cc }}"
+          CXX: "${{ matrix.cxx }}"
           CGO_ENABLED: "1"
           CGO_CFLAGS: "-I${{ github.workspace }}/include"
 
-      - name: Test
+      - name: Build (macOS)
+        if: runner.os == 'macOS'
         run: |
-          ./juicefs.exe --version
-          ./juicefs.exe --help
-          du ./juicefs.exe
+          go build -o juicefs -ldflags "-s -w" -trimpath .
+        env:
+          CGO_ENABLED: "1"
 
-          job spawn { juicefs format sqlite3://myjfs.db myjfs o+e> log.txt }
+      - name: Build (Linux)
+        if: runner.os == 'Linux'
+        run: |
+          go build -o juicefs -ldflags "-s -w -linkmode external -extldflags '-static'" -trimpath .
+        env:
+          CC: "${{ matrix.cc }}"
+          CGO_ENABLED: "1"
+          CGO_CFLAGS: "-D_LARGEFILE64_SOURCE"
+
+      - name: Test
+        if: runner.os != 'Windows'
+        run: |
+          ./juicefs --version
+          ./juicefs --help
+          do -i { objdump -T ./juicefs }
+          du ./juicefs | get apparent.0 | print
+
+          job spawn { ./juicefs format sqlite3://myjfs.db myjfs o+e> log.txt }
           sleep 2sec
 
           open log.txt
+
+      - name: Test
+        if: runner.os == 'Windows'
+        run: |
+          ./juicefs.exe --version
+          ./juicefs.exe --help
+          du ./juicefs.exe | get apparent.0 | print
+
+          job spawn { ./juicefs.exe format sqlite3://myjfs.db myjfs o+e> log.txt }
+          sleep 2sec
+
+          open log.txt
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          path: |
+            juicefs.exe
+            juicefs
+          name: juicefs-${{ matrix.os }}-${{ github.run_attempt }}
