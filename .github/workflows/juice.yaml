@@ -8,9 +8,10 @@ defaults:
     shell: nu {0}
 jobs:
   build:
-    runs-on: windows-latest
+    runs-on: windows-11-arm
     steps:
       - uses: hustcer/setup-nu@v3
+      - uses: mlugg/setup-zig@v2
       - uses: actions/checkout@v4
         with:
           repository: juicedata/juicefs
@@ -32,8 +33,10 @@ jobs:
         run: |
           go build -o juicefs.exe -ldflags "-s -w" -trimpath .
         env:
-          CC: gcc
-          CXX: g++
+          #   CC: gcc
+          #   CXX: g++
+          CC: "zig cc"
+          CXX: "zig c++"
           CGO_ENABLED: "1"
           CGO_CFLAGS: "-I${{ github.workspace }}/include"
 
