@@ -8,7 +8,7 @@ defaults:
     shell: nu {0}
 jobs:
   build:
-    runs-on: windows-11-arm
+    runs-on: windows-latest
     steps:
       - uses: hustcer/setup-nu@v3
       - uses: actions/checkout@v4
