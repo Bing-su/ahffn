@@ -1,0 +1,44 @@
+name: sshx
+
+on:
+  workflow_dispatch:
+    inputs:
+      runner:
+        description: "Runner to use"
+        required: true
+        default: "ubuntu-latest"
+        type: choice
+        options:
+          - ubuntu-latest
+          - ubuntu-24.04-arm
+          - windows-latest
+          - windows-11-arm
+          - macos-latest
+
+defaults:
+  run:
+    shell: nu {0}
+
+jobs:
+  sshx:
+    runs-on: ${{ inputs.runner }}
+    steps:
+      - uses: hustcer/setup-nu@v3
+
+      - name: sshx
+        if: startsWith(inputs.runner, 'ubuntu') || startsWith(inputs.runner, 'macos')
+        run: curl -sSf https://sshx.io/get | sh -s run
+
+      - name: sshx-windows-amd64
+        if: inputs.runner == 'windows-latest'
+        run: |
+          http get https://sshx.s3.amazonaws.com/sshx-x86_64-pc-windows-msvc.zip | save sshx.zip
+          7z e sshx.zip
+          ./sshx.exe
+
+      - name: sshx-windows-arm64
+        if: inputs.runner == 'windows-11-arm'
+        run: |
+          http get https://sshx.s3.amazonaws.com/sshx-aarch64-pc-windows-msvc.zip | save sshx.zip
+          7z e sshx.zip
+          ./sshx.exe
