@@ -14,21 +14,20 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
-            cc: "musl-gcc"
-          - os: ubuntu-24.04-arm
-            cc: "musl-gcc"
-          - os: macos-latest
-          - os: windows-latest
-            cc: "gcc"
-            cxx: "g++"
+          # - os: ubuntu-latest
+          #   cc: "musl-gcc"
+          # - os: ubuntu-24.04-arm
+          #   cc: "musl-gcc"
+          # - os: macos-latest
+          # - os: windows-latest
+          #   cc: "gcc"
+          #   cxx: "g++"
           - os: windows-11-arm
             cc: "clang"
             cxx: "clang++"
 
     steps:
       - uses: hustcer/setup-nu@v3
-      - uses: mlugg/setup-zig@v2
       - uses: actions/checkout@v4
         with:
           repository: juicedata/juicefs
@@ -54,6 +53,15 @@ jobs:
         run: |
           mkdir ${{ github.workspace }}/include
           cp -r ./hack/winfsp_headers/* ${{ github.workspace }}/include
+
+      - name: Setup windows arm LLVM
+        if: matrix.os == 'windows-11-arm'
+        run: |
+          http get 'https://github.com/mstorsjo/llvm-mingw/releases/download/20250514/llvm-mingw-20250514-ucrt-aarch64.zip' | save llvm.zip
+          7z x llvm.zip
+          $env.Path = $env.Path | prepend ./llvm-mingw-20250514-ucrt-aarch64/bin | path expand
+          ${{ matrix.cc }} --version
+          ${{ matrix.cxx }} --version
 
       - name: Build (Windows)
         if: runner.os == 'Windows'
