@@ -44,7 +44,7 @@ jobs:
           sudo apt install -y musl-dev musl-tools
 
       - name: CC version
-        run: ${{ matrix.cc }} --version
+        run: do -i { which ${{ matrix.cc }} ; ${{ matrix.cc }} --version }
       - run: choco install -y winfsp
         if: runner.os == 'Windows'
 
@@ -71,7 +71,7 @@ jobs:
           CC: "${{ matrix.cc }}"
           CXX: "${{ matrix.cxx }}"
           CGO_ENABLED: "1"
-          CGO_CFLAGS: "-I${{ github.workspace }}/include"
+          CGO_CFLAGS: "-I${{ github.workspace }}/include -target aarch64-windows-msvc"
 
       - name: Build (macOS)
         if: runner.os == 'macOS'
