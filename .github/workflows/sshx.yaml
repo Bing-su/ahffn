@@ -25,6 +25,11 @@ jobs:
     steps:
       - uses: hustcer/setup-nu@v3
 
+      - name: Install LLVM and Clang
+        uses: KyleMayes/install-llvm-action@v2
+        with:
+          version: "20"
+
       - name: sshx
         if: startsWith(inputs.runner, 'ubuntu') || startsWith(inputs.runner, 'macos')
         run: curl -sSf https://sshx.io/get | sh -s run
